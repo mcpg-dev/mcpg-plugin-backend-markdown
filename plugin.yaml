@@ -1,0 +1,37 @@
+schema: mcpg.dev/plugin/v1
+id: dev.mcpg.backend.markdown
+name: Markdown Conversion
+license: Apache-2.0
+description: |
+  Converts documents to LLM-friendly Markdown — Office files (DOCX/PPTX/XLSX/
+  XLS), PDF, HTML, EPUB, Outlook `.msg`, archives, images, audio, CSV/TSV,
+  JSON/NDJSON, XML, RSS/Atom and Jupyter notebooks. One cdylib carrying two
+  entities over a single conversion engine: the `backend` binding exposes
+  `convert_to_markdown` as an MCP tool, and the `markdown` transform entity
+  converts a document already inside a payload, as a global pre/post-dispatch
+  transform or a pipeline `plugin_transform` step.
+
+  Bytes arrive inline (base64/text), from the gateway content store
+  (`mcpg-resource://`), or — only when the operator opts in — over HTTP with
+  the DNS-rebinding guard applied. There is NO local-filesystem mode and the
+  plugin declares no filesystem capability. Image references inside a document
+  are rendered as links and never fetched.
+
+  Output can be shaped by operator MiniJinja templates (whole-document and
+  per-block) with YAML/TOML front matter. Optional enrichment — image
+  captioning, OCR, audio transcription — is dispatched to an existing
+  `dev.mcpg.backend.llm.*` binding through the host, so the converter never
+  holds a provider credential. Enrichment is fail-soft: a failure degrades the
+  document with a warning, never the call.
+class: backend
+runtime: native-cdylib-v1
+protocol_version: "1.0"
+# Declared because the plugin CAN open an outbound socket — the opt-in `url`
+# source mode. It is unused unless a profile sets `sources.url: true`, which is
+# off by default, but under-declaring would let a plugin that can reach the
+# network pass as one that cannot.
+#
+# Note what is NOT here: no `filesystem_read`, no `filesystem_write`, no
+# `secrets_read`. The plugin never touches the disk, and enrichment reaches a
+# model through the host rather than holding a provider credential.
+required_capabilities: [network_outbound]

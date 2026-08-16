@@ -1,0 +1,54 @@
+[package]
+name = "mcpg-plugin-backend-markdown"
+version = "0.1.0-alpha.1"
+edition = "2024"
+license = "Apache-2.0"
+description = """
+Any file → Markdown, for MCPG. One cdylib carrying two entities over a single
+conversion engine: a `backend` binding exposing `convert_to_markdown` as an
+MCP tool, and a `transform` entity that converts a document already present in
+a payload as a global transform or a pipeline `plugin_transform` step.
+
+Reads Office files, PDF, HTML, e-mail, archives, images and audio and emits
+LLM-friendly Markdown, with optional operator MiniJinja templates and optional
+image captioning / transcription dispatched to an existing LLM binding. Bytes
+arrive inline, from the gateway content store, or (opt-in) over HTTP — never
+from the local filesystem: the plugin declares no filesystem capability.
+"""
+
+[lib]
+# cdylib: the .so the gateway's native_loader dlopens. rlib: in-tree unit
+# tests + workspace compile.
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# Default OFF so a plain workspace build emits the rlib (no
+# mcpg_plugin_register) and doesn't clash with the other plugin rlibs.
+default = []
+cdylib-export = []
+static-firstparty = []
+
+[dependencies]
+mcpg-plugin-protocol = { git = "https://github.com/mcpg-dev/mcpg-plugin-protocol", tag = "v0.1.0-beta.14", version = "=0.1.0-beta.14" }
+mcpg-plugin-sdk = { path = "../../../plugin-sdk", version = "=0.1.0-beta.14", features = [
+  "static-firstparty",
+] }
+# The conversion engine. Pure compute, no I/O — everything that touches the
+# outside world lives here in the plugin instead.
+mcpg-markdown-convert = { path = "../../../markdown-convert", version = "=0.1.0-beta.1", features = [
+  "all",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+blake3 = "1"
+# Staging a scanned PDF in the content store so a vision model can read it.
+bytes = "1"
+# Outbound fetch for the opt-in `url` source mode. rustls only — the workspace
+# bans the openssl and native-tls wrappers.
+ureq = { version = "3", default-features = false, features = ["rustls"] }
+
+[dev-dependencies]
+serde_json = "1"
+# Building OOXML fixtures in memory for the end-to-end tests.
+zip = { version = "2", default-features = false, features = ["deflate"] }
