@@ -1,6 +1,6 @@
 [package]
 name = "mcpg-plugin-backend-markdown"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 edition = "2024"
 license = "Apache-2.0"
 description = """
@@ -30,14 +30,13 @@ static-firstparty = []
 
 [dependencies]
 mcpg-plugin-protocol = { git = "https://github.com/mcpg-dev/mcpg-plugin-protocol", tag = "v0.1.0-beta.14", version = "=0.1.0-beta.14" }
-mcpg-plugin-sdk = { path = "../../../plugin-sdk", version = "=0.1.0-beta.14", features = [
-  "static-firstparty",
-] }
+# Internal deps stay on ONE line: the mirror rewrites `path` to a git+tag
+# reference with a per-line match, so a wrapped declaration reaches the public
+# repo still pointing at a path that only exists in this tree.
+mcpg-plugin-sdk = { git = "https://github.com/mcpg-dev/mcpg-plugin-sdk", tag = "v0.1.0-beta.14", version = "=0.1.0-beta.14", features = ["static-firstparty"] }
 # The conversion engine. Pure compute, no I/O — everything that touches the
 # outside world lives here in the plugin instead.
-mcpg-markdown-convert = { path = "../../../markdown-convert", version = "=0.1.0-beta.1", features = [
-  "all",
-] }
+mcpg-markdown-convert = { git = "https://github.com/mcpg-dev/mcpg-markdown-convert", tag = "v0.1.0-beta.2", version = "=0.1.0-beta.2", features = ["all"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 base64 = "0.22"
