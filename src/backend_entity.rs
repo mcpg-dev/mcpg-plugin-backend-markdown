@@ -31,6 +31,15 @@ use crate::state::{MarkdownState, shared};
 struct BindingSpec {
     #[serde(default)]
     profile: Option<String>,
+    /// Injected unconditionally by the host's dynamic-registration path
+    /// (`gateway.server.allow_private_backends`). Declared so the flatten
+    /// below does not sweep it into the profile (whose parser rejects
+    /// unknown fields), and deliberately unused: conversion dials no
+    /// operator-supplied network targets, so the SSRF egress toggle does
+    /// not apply.
+    #[serde(default)]
+    #[allow(dead_code)]
+    allow_private_backends: bool,
     #[serde(flatten)]
     inline: Value,
 }
@@ -307,6 +316,20 @@ mod tests {
         });
         let keys: Vec<&String> = schema.as_object().unwrap().keys().collect();
         assert!(!keys.iter().any(|k| k.as_str() == "path"));
+    }
+
+    #[test]
+    fn the_host_injected_ssrf_toggle_stays_out_of_the_profile() {
+        // The host stamps `allow_private_backends` into every dynamic
+        // backend spec; the declared field must absorb it so the
+        // flatten does not hand it to the strict profile parser.
+        let spec: BindingSpec = serde_json::from_value(json!({
+            "allow_private_backends": false,
+            "limits": {"max_depth": 2}
+        }))
+        .unwrap();
+        assert!(spec.inline.get("allow_private_backends").is_none());
+        assert_eq!(spec.inline["limits"]["max_depth"], 2);
     }
 
     #[test]
