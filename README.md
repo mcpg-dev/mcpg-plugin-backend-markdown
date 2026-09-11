@@ -66,7 +66,7 @@ which is why they are one `.so` rather than two plugins.
 ```yaml
 plugins:
   - id: dev.mcpg.backend.markdown
-    source: { oci: ghcr.io/mcpg-dev/source-code/plugins/backend-markdown:protocol-1 }
+    source: { oci: ghcr.io/mcpg-dev/plugins/backend-markdown }
 
 mcp:
   capabilities:
