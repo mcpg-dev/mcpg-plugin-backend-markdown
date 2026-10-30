@@ -54,7 +54,7 @@ fn docx(body: &str) -> Vec<u8> {
     let mut buf = Vec::new();
     {
         let mut w = zip::ZipWriter::new(std::io::Cursor::new(&mut buf));
-        let opts: zip::write::FileOptions<'_, ()> = zip::write::FileOptions::default();
+        let opts = zip::write::SimpleFileOptions::default();
         for (name, body) in [
             ("[Content_Types].xml", "<Types/>"),
             ("word/document.xml", &doc),
